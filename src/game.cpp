@@ -141,6 +141,9 @@ void Game::reloadFiles()
     m_shop.load(AssetsDir + "shop.cfg", m_weapons);
     m_shop.build(m_tileset);
     m_debugMap = CreateTileDebugMap(m_tileset, m_weapons, m_debugItems);
+    // ako smo u enterijeru, ucitaj i njegovu mapu (da R osvezi i enterijere)
+    if (m_inInterior && !m_interiorFile.empty())
+        m_interiorMap.load(AssetsDir + m_interiorFile);
     m_chunks.clear(); // chunkovi su "peceni" sa starim tile-ovima
 }
 
@@ -156,6 +159,70 @@ void Game::useMap(Tilemap* map, DroppedItems* items)
     m_bullets.clear();
 }
 
+// ============================================================================
+//  Enterijeri (ulazak kroz vrata u debug modu)
+// ============================================================================
+
+void Game::enterInterior(const std::string& file, int doorColumn, int doorRow)
+{
+    // ucitaj mapu enterijera (pise "izlaz X Y" i "start X Y")
+    if (!m_interiorMap.load(AssetsDir + file))
+    {
+        showMessage("Ne mogu da ucitam: " + file, Color{ 255, 110, 100, 255 });
+        return;
+    }
+    // zapamti odakle smo usli: vracamo se JEDNO POLJE ISPOD vrata (tile-poravnato),
+    // da ne upadnemo opet u ista vrata i napravimo petlju ulaz/izlaz
+    float tile = static_cast<float>(m_tileset.tileSize());
+    m_returnMap = m_map;
+    m_returnItems = m_items;
+    m_returnPos = Vector2{ doorColumn * tile, (doorRow + 1) * tile };
+
+    m_interiorFile = file;
+    m_interiorItems.clear();
+    useMap(&m_interiorMap, &m_interiorItems);
+    m_player.setPosition(m_interiorMap.startPosition(m_tileset));
+    m_inInterior = true;
+}
+
+void Game::leaveInterior()
+{
+    if (m_returnMap == nullptr)
+        return;
+    useMap(m_returnMap, m_returnItems);
+    m_player.setPosition(m_returnPos); // vec je jedno polje ISPOD vrata
+    m_inInterior = false;
+    m_returnMap = nullptr;
+    m_returnItems = nullptr;
+}
+
+// Proverava da li igrac stoji na ulazu/izlazu i prebacuje mapu.
+void Game::updateInteriorDoors()
+{
+    int tile = m_tileset.tileSize();
+    Rectangle feet = m_player.bounds();
+    int column = static_cast<int>((feet.x + feet.width / 2.0f) / tile);
+    int row = static_cast<int>((feet.y + feet.height / 2.0f) / tile);
+
+    if (!m_inInterior)
+    {
+        for (const MapEntrance& e : m_map->entrances())
+        {
+            if (e.column == column && e.row == row)
+            {
+                enterInterior(e.target, e.column, e.row);
+                return;
+            }
+        }
+    }
+    else if (m_map->hasExit())
+    {
+        Vector2 ex = m_map->exitTile();
+        if (static_cast<int>(ex.x) == column && static_cast<int>(ex.y) == row)
+            leaveInterior();
+    }
+}
+
 void Game::giveItem(const char* weaponName, int count)
 {
     // po imenu, ne po id-u: ako promenis redosled u weapons.cfg, ovo i dalje radi
@@ -168,6 +235,8 @@ void Game::startDebug()
 {
     m_mode = GameMode::Debug;
     m_onDebugMap = false;
+    m_inInterior = false;
+    m_returnMap = nullptr;
     useMap(&m_worldMap, &m_worldItems);
     m_player.setPosition(m_worldMap.startPosition(m_tileset));
     m_player.resetHealth();
@@ -201,6 +270,8 @@ void Game::startDebug()
 void Game::startSurvival()
 {
     m_mode = GameMode::Survival;
+    m_inInterior = false;
+    m_returnMap = nullptr;
     useMap(&m_arenaMap, &m_arenaItems);
     m_arenaItems.clear();
     m_player.setPosition(m_arenaMap.startPosition(m_tileset));
@@ -227,6 +298,8 @@ void Game::startSurvival()
 void Game::goToMenu()
 {
     m_screen = Screen::Menu;
+    m_inInterior = false;
+    m_returnMap = nullptr;
     useMap(&m_worldMap, &m_worldItems); // meni u pozadini prikazuje svet
     ShowCursor();
 }
@@ -350,7 +423,7 @@ void Game::updatePlaying(float dt)
     if (IsKeyPressed(KEY_R))
         reloadFiles();
 
-    if (debugMode && IsKeyPressed(KEY_F2))
+    if (debugMode && !m_inInterior && IsKeyPressed(KEY_F2))
     {
         if (!m_onDebugMap)
         {
@@ -376,6 +449,8 @@ void Game::updatePlaying(float dt)
 
     // ---- igrac i kamera ----
     m_player.update(dt, *m_map, m_tileset);
+    if (debugMode)
+        updateInteriorDoors(); // ulazak/izlazak iz enterijera (menja mapu)
     m_camera.zoom = m_uiScale;
     FollowWithCamera(m_camera, m_player.center(), *m_map, m_tileset);
 
@@ -453,6 +528,60 @@ void Game::updatePlaying(float dt)
 //  Crtanje
 // ============================================================================
 
+// Efekat na vratima u koja moze da se udje:
+//   - presijavanje: dijagonalni blesak stalno prelazi preko vrata
+//   - otskrinu: kako prilazis (unutar ~2 polja), kroz pukotinu probija toplo
+//     svetlo koje se siri sto si blizi
+void Game::drawDoorFx(int column, int row) const
+{
+    float t = static_cast<float>(m_tileset.tileSize());
+    float x = column * t, y = row * t;
+    Vector2 dc{ x + t / 2.0f, y + t / 2.0f };
+
+    // koliko je igrac blizu (u poljima) -> koliko su vrata "otvorena" (0..1)
+    Vector2 pc = m_player.center();
+    float dist = std::sqrt((pc.x - dc.x) * (pc.x - dc.x) + (pc.y - dc.y) * (pc.y - dc.y)) / t;
+    float open = std::clamp((2.2f - dist) / 1.6f, 0.0f, 1.0f);
+
+    // --- otskrinu: vrata na sarci (sarka levo, kvaka desno) se otvaraju U DESNO ---
+    if (open > 0.02f)
+    {
+        float fm = t * 0.09f;                   // tanak dovratak uz desnu ivicu
+        float rx = x + t - fm;                  // desna ivica otvora
+        float openW = open * t * 0.58f;         // koliko se otvorilo (raste kad prilazis)
+        float lx = rx - openW;                  // ivica vrata koja se otvara (svinguje)
+        float top = y + t * 0.10f, hh = t * 0.84f;
+        float ew = std::max(1.0f, t * 0.09f);
+        DrawRectangleV(Vector2{ lx, top }, Vector2{ openW, hh },
+                       Fade(Color{ 28, 22, 30, 255 }, 0.88f * open));                 // tamni otvor desno
+        DrawRectangleV(Vector2{ lx - ew, top }, Vector2{ ew, hh },
+                       Fade(Color{ 255, 205, 135, 255 }, 0.60f * open));              // osvetljena ivica vrata
+        DrawRectangleV(Vector2{ rx, top }, Vector2{ std::max(1.0f, t * 0.06f), hh },
+                       Fade(Color{ 0, 0, 0, 255 }, 0.30f * open));                    // senka dovratka
+    }
+
+    // --- presijavanje: dijagonalni blesak prelazi preko vrata (iseceno na polje) ---
+    Vector2 s0 = GetWorldToScreen2D(Vector2{ x, y }, m_camera);
+    Vector2 s1 = GetWorldToScreen2D(Vector2{ x + t, y + t }, m_camera);
+    int sw = static_cast<int>(s1.x - s0.x), sh = static_cast<int>(s1.y - s0.y);
+    if (sw > 0 && sh > 0)
+    {
+        BeginScissorMode(static_cast<int>(s0.x), static_cast<int>(s0.y), sw, sh);
+        float cycle = 2.4f; // sekundi po blesku (pa pauza)
+        float ph = std::fmod(m_time + column * 0.31f + row * 0.17f, cycle) / cycle;
+        float sweep = ph / 0.40f; // blesak traje prvih ~40% ciklusa
+        if (sweep <= 1.0f)
+        {
+            float gx = x - t * 0.7f + sweep * (t * 2.4f);
+            float a = 0.55f * std::sin(sweep * PI); // jace na sredini prelaza
+            DrawLineEx(Vector2{ gx, y - t * 0.2f }, Vector2{ gx - t, y + t * 1.2f }, 2.2f, Fade(WHITE, a));
+            DrawLineEx(Vector2{ gx + t * 0.26f, y - t * 0.2f }, Vector2{ gx - t * 0.74f, y + t * 1.2f },
+                       1.1f, Fade(WHITE, a * 0.65f));
+        }
+        EndScissorMode();
+    }
+}
+
 void Game::drawWorld() const
 {
     if (m_useChunks)
@@ -484,6 +613,16 @@ void Game::drawWorld() const
         }
     }
 
+    // vrata enterijera: presijavanje + otskrinu kad pridjes (bez okruglih efekata)
+    if (m_mode == GameMode::Debug && m_screen != Screen::Menu)
+    {
+        if (!m_inInterior)
+            for (const MapEntrance& e : m_map->entrances())
+                drawDoorFx(e.column, e.row);
+        else if (m_map->hasExit())
+            drawDoorFx(static_cast<int>(m_map->exitTile().x), static_cast<int>(m_map->exitTile().y));
+    }
+
     // Kad nisanis nagore (vise od ~20 stepeni), oruzje je IZA lika; inace ispred.
     const WeaponInfo* weapon = m_weapons.find(m_inventory.selectedItem());
     Vector2 shoulder = m_player.shoulder();
@@ -510,6 +649,24 @@ void Game::drawPlayingHud() const
     int screenW = GetScreenWidth();
 
     DrawMapLabels(*m_map, m_camera, m_tileset);
+
+    // natpisi iznad vrata enterijera
+    if (m_mode == GameMode::Debug)
+    {
+        float t = static_cast<float>(m_tileset.tileSize());
+        int font = UiFont(m_uiScale);
+        auto doorLabel = [&](Vector2 tilePos, const char* text, Color color) {
+            Vector2 s = GetWorldToScreen2D(Vector2{ tilePos.x * t + t / 2.0f, tilePos.y * t - 2.0f }, m_camera);
+            int w = MeasureText(text, font);
+            DrawText(text, static_cast<int>(s.x) - w / 2 + 1, static_cast<int>(s.y) - font + 1, font, BLACK);
+            DrawText(text, static_cast<int>(s.x) - w / 2, static_cast<int>(s.y) - font, font, color);
+        };
+        if (!m_inInterior)
+            for (const MapEntrance& e : m_map->entrances())
+                doorLabel(Vector2{ (float)e.column, (float)e.row }, "UDJI", GOLD);
+        else if (m_map->hasExit())
+            doorLabel(m_map->exitTile(), "IZLAZ", SKYBLUE);
+    }
 
     // gornja traka sa kontrolama
     DrawRectangle(0, 0, screenW, 48, Fade(BLACK, 0.6f));

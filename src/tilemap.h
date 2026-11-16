@@ -18,6 +18,15 @@ struct MapLabel
     std::string text;
 };
 
+// Ulaz u enterijer: polje na kome stojis vodi u drugu mapu (fajl).
+//   red mape:  ulaz X Y ime_fajla.txt
+struct MapEntrance
+{
+    int column = 0;
+    int row = 0;
+    std::string target; // ime fajla mape u koju se ulazi
+};
+
 class Tilemap
 {
 public:
@@ -54,12 +63,22 @@ public:
     bool hasShopDoor() const { return m_hasShopDoor; }
     Vector2 shopDoor() const { return m_shopDoor; }
 
+    // Ulazi u enterijere (redovi "ulaz X Y fajl"), u koordinatama tile-ova
+    const std::vector<MapEntrance>& entrances() const { return m_entrances; }
+
+    // Izlaz iz enterijera (red "izlaz X Y"): polje po kome gazis da izadjes
+    bool hasExit() const { return m_hasExit; }
+    Vector2 exitTile() const { return m_exit; }
+
 private:
     std::vector<std::vector<int>> m_tiles;
     std::vector<MapLabel> m_labels;
     std::vector<Vector2> m_spawns;
+    std::vector<MapEntrance> m_entrances;
     bool m_hasShopDoor = false;
     Vector2 m_shopDoor{};
+    bool m_hasExit = false;
+    Vector2 m_exit{};
     int m_startColumn = 1;
     int m_startRow = 1;
 };

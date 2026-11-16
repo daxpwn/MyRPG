@@ -1,0 +1,242 @@
+{
+  "name_to_id": {
+    "pod_sivi": 17,
+    "pod_parket": 18,
+    "pod_zut": 19,
+    "zid_vrh": 20,
+    "zid": 21,
+    "zid_tan_vrh": 22,
+    "zid_tan": 23,
+    "globus": 24,
+    "biljka_mala": 25,
+    "biljka": 26,
+    "vrata_mod_0_0": 27,
+    "vrata_mod_1_0": 28,
+    "krevet_0_0": 29,
+    "krevet_0_1": 30,
+    "krevet_0_2": 31,
+    "krevet_1_0": 32,
+    "krevet_1_1": 33,
+    "krevet_1_2": 34,
+    "krevet_2_0": 35,
+    "krevet_2_1": 36,
+    "krevet_2_2": 37,
+    "sofa_0_0": 38,
+    "sofa_0_1": 39,
+    "sofa_1_0": 40,
+    "sofa_1_1": 41,
+    "fotelja_0_0": 42,
+    "fotelja_1_0": 43,
+    "fotelja_lj_0_0": 44,
+    "fotelja_lj_1_0": 45,
+    "stolica_0_0": 46,
+    "stolica_1_0": 47,
+    "sto_0_0": 48,
+    "sto_0_1": 49,
+    "sto_1_0": 50,
+    "sto_1_1": 51,
+    "polica_0_0": 52,
+    "polica_0_1": 53,
+    "polica_1_0": 54,
+    "polica_1_1": 55,
+    "orman_0_0": 56,
+    "orman_0_1": 57,
+    "orman_1_0": 58,
+    "orman_1_1": 59,
+    "komoda_0_0": 60,
+    "komoda_0_1": 61,
+    "komoda_1_0": 62,
+    "komoda_1_1": 63,
+    "pult_0_0": 64,
+    "pult_0_1": 65,
+    "pult_1_0": 66,
+    "pult_1_1": 67,
+    "tepih_z_0_0": 68,
+    "tepih_z_0_1": 69,
+    "tepih_z_1_0": 70,
+    "tepih_z_1_1": 71,
+    "tepih_c_0_0": 72,
+    "tepih_c_0_1": 73,
+    "tepih_c_1_0": 74,
+    "tepih_c_1_1": 75,
+    "biljka_visoka_0_0": 76,
+    "biljka_visoka_1_0": 77,
+    "prozor_0_0": 78,
+    "prozor_0_1": 79,
+    "prozor_1_0": 80,
+    "prozor_1_1": 81,
+    "slika_0_0": 82,
+    "slika_1_0": 83,
+    "tabla_0_0": 84,
+    "tabla_0_1": 85,
+    "tabla_1_0": 86,
+    "tabla_1_1": 87
+  },
+  "pieces": {
+    "vrata_mod": [
+      [
+        "vrata_mod_0_0"
+      ],
+      [
+        "vrata_mod_1_0"
+      ]
+    ],
+    "krevet": [
+      [
+        "krevet_0_0",
+        "krevet_0_1",
+        "krevet_0_2"
+      ],
+      [
+        "krevet_1_0",
+        "krevet_1_1",
+        "krevet_1_2"
+      ],
+      [
+        "krevet_2_0",
+        "krevet_2_1",
+        "krevet_2_2"
+      ]
+    ],
+    "sofa": [
+      [
+        "sofa_0_0",
+        "sofa_0_1"
+      ],
+      [
+        "sofa_1_0",
+        "sofa_1_1"
+      ]
+    ],
+    "fotelja": [
+      [
+        "fotelja_0_0"
+      ],
+      [
+        "fotelja_1_0"
+      ]
+    ],
+    "fotelja_lj": [
+      [
+        "fotelja_lj_0_0"
+      ],
+      [
+        "fotelja_lj_1_0"
+      ]
+    ],
+    "stolica": [
+      [
+        "stolica_0_0"
+      ],
+      [
+        "stolica_1_0"
+      ]
+    ],
+    "sto": [
+      [
+        "sto_0_0",
+        "sto_0_1"
+      ],
+      [
+        "sto_1_0",
+        "sto_1_1"
+      ]
+    ],
+    "polica": [
+      [
+        "polica_0_0",
+        "polica_0_1"
+      ],
+      [
+        "polica_1_0",
+        "polica_1_1"
+      ]
+    ],
+    "orman": [
+      [
+        "orman_0_0",
+        "orman_0_1"
+      ],
+      [
+        "orman_1_0",
+        "orman_1_1"
+      ]
+    ],
+    "komoda": [
+      [
+        "komoda_0_0",
+        "komoda_0_1"
+      ],
+      [
+        "komoda_1_0",
+        "komoda_1_1"
+      ]
+    ],
+    "pult": [
+      [
+        "pult_0_0",
+        "pult_0_1"
+      ],
+      [
+        "pult_1_0",
+        "pult_1_1"
+      ]
+    ],
+    "tepih_z": [
+      [
+        "tepih_z_0_0",
+        "tepih_z_0_1"
+      ],
+      [
+        "tepih_z_1_0",
+        "tepih_z_1_1"
+      ]
+    ],
+    "tepih_c": [
+      [
+        "tepih_c_0_0",
+        "tepih_c_0_1"
+      ],
+      [
+        "tepih_c_1_0",
+        "tepih_c_1_1"
+      ]
+    ],
+    "biljka_visoka": [
+      [
+        "biljka_visoka_0_0"
+      ],
+      [
+        "biljka_visoka_1_0"
+      ]
+    ],
+    "prozor": [
+      [
+        "prozor_0_0",
+        "prozor_0_1"
+      ],
+      [
+        "prozor_1_0",
+        "prozor_1_1"
+      ]
+    ],
+    "slika": [
+      [
+        "slika_0_0"
+      ],
+      [
+        "slika_1_0"
+      ]
+    ],
+    "tabla": [
+      [
+        "tabla_0_0",
+        "tabla_0_1"
+      ],
+      [
+        "tabla_1_0",
+        "tabla_1_1"
+      ]
+    ]
+  }
+}

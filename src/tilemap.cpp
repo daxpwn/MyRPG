@@ -15,8 +15,11 @@ bool Tilemap::load(const std::string& path)
 
     std::vector<std::vector<int>> tiles;
     std::vector<Vector2> spawns;
+    std::vector<MapEntrance> entrances;
     bool hasShopDoor = false;
     Vector2 shopDoor{};
+    bool hasExit = false;
+    Vector2 exit{};
     int startColumn = 1;
     int startRow = 1;
 
@@ -47,6 +50,19 @@ bool Tilemap::load(const std::string& path)
             Vector2 spawn{};
             in >> spawn.x >> spawn.y;
             spawns.push_back(spawn);
+            continue;
+        }
+        if (first == "ulaz")
+        {
+            MapEntrance e{};
+            in >> e.column >> e.row >> e.target;
+            entrances.push_back(e);
+            continue;
+        }
+        if (first == "izlaz")
+        {
+            in >> exit.x >> exit.y;
+            hasExit = true;
             continue;
         }
 
@@ -83,8 +99,11 @@ bool Tilemap::load(const std::string& path)
 
     m_tiles = tiles;
     m_spawns = spawns;
+    m_entrances = entrances;
     m_hasShopDoor = hasShopDoor;
     m_shopDoor = shopDoor;
+    m_hasExit = hasExit;
+    m_exit = exit;
     m_labels.clear();
     m_startColumn = startColumn;
     m_startRow = startRow;
@@ -98,7 +117,9 @@ void Tilemap::create(int width, int height, int fillId)
     m_tiles.assign(height, std::vector<int>(width, fillId));
     m_labels.clear();
     m_spawns.clear();
+    m_entrances.clear();
     m_hasShopDoor = false;
+    m_hasExit = false;
     m_startColumn = 1;
     m_startRow = 1;
 }

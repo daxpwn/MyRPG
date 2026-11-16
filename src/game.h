@@ -69,12 +69,18 @@ private:
 
     // --- crtanje ---
     void drawWorld() const;     // unutar BeginMode2D
+    void drawDoorFx(int column, int row) const; // presijavanje + otskrinu vrata
     void drawPlayingHud() const;
     void drawPauseOverlay() const;
     void drawGameOverOverlay() const;
     void drawHeartsAndArmor() const; // srca, armor i novcici iznad hotbara
 
     void useMap(Tilemap* map, DroppedItems* items);
+
+    // --- enterijeri (debug mod) ---
+    void enterInterior(const std::string& file, int doorColumn, int doorRow); // udji
+    void leaveInterior();                          // izadji kroz vrata u enterijeru
+    void updateInteriorDoors();                    // provera gazenja po vratima
 
     // resursi
     Tileset m_tileset;
@@ -86,8 +92,8 @@ private:
     Texture2D m_ui{};   // ui.png: srca, armor, novcic
 
     // mape i stvari na zemlji (svaka mapa ima svoje)
-    Tilemap m_worldMap, m_debugMap, m_arenaMap;
-    DroppedItems m_worldItems, m_debugItems, m_arenaItems, m_shopItems;
+    Tilemap m_worldMap, m_debugMap, m_arenaMap, m_interiorMap;
+    DroppedItems m_worldItems, m_debugItems, m_arenaItems, m_shopItems, m_interiorItems;
     Tilemap* m_map = &m_worldMap;
     DroppedItems* m_items = &m_worldItems;
 
@@ -102,6 +108,11 @@ private:
 
     // stanje igre
     bool m_onDebugMap = false;
+    bool m_inInterior = false;        // da li smo u enterijeru
+    Tilemap* m_returnMap = nullptr;   // mapa iz koje smo usli u enterijer
+    DroppedItems* m_returnItems = nullptr;
+    Vector2 m_returnPos{};            // gde da se vratimo kad izadjemo
+    std::string m_interiorFile;       // ime fajla trenutnog enterijera (za R reload)
     Vector2 m_savedPosition{};
     float m_shake = 0.0f;
     int m_lastSlot = 0;
